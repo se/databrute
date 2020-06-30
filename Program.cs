@@ -1,4 +1,5 @@
-﻿using System.Linq;
+﻿using System.Threading.Tasks;
+using System.Linq;
 using System.Collections.Generic;
 using System;
 using System.Diagnostics;
@@ -11,7 +12,9 @@ namespace Databrute
 {
 	class Program
 	{
-		static void Main(string[] args)
+		static readonly HttpClient client = new HttpClient();
+
+		static async Task Main(string[] args)
 		{
 			var sw = new Stopwatch();
 			sw.Start();
@@ -39,6 +42,7 @@ namespace Databrute
 			}
 
 			var formatted = argList.Any(x => x.Equals("--formatted"));
+			var parallel = argList.Any(x => x.Equals("--parallel"));
 
 			var colors = new[] { "black", "red", "brown", "white" };
 			var testUsers = new Faker<User>()
@@ -61,34 +65,45 @@ namespace Databrute
 					});
 
 			var success = 0;
-			for (int i = 0; i < count; i++)
+			if (parallel)
 			{
-				var user = testUsers.Generate();
-				var body = JsonConvert.SerializeObject(user, formatted ? Formatting.Indented : Formatting.None);
-				Console.WriteLine(body);
-				if (!sendRequest) continue;
-				var isDone = SendRequest(url, body);
-				if (isDone) success++;
-			}
-			sw.Stop();
-			if (success == 0)
-			{
-				Console.WriteLine($"Generated {count} users in {sw.Elapsed} time.");
+				var tasks = Enumerable.Range(0, count).Select(i => CreateUser(url, formatted, testUsers, sendRequest, success));
+				var results = (await Task.WhenAll(tasks)).Select(x => x).ToList();
+				success = results.Count(x => x);
 			}
 			else
 			{
-				Console.WriteLine($"Generated {count} users and sent {success} successfull request in {sw.Elapsed} time.");
+				for (int i = 0; i < count; i++)
+				{
+					var result = await CreateUser(url, formatted, testUsers, sendRequest, success);
+					if (result) success++;
+				}
 			}
+			sw.Stop();
+			if (success == 0)
+				Console.WriteLine($"Generated {count} users in {sw.Elapsed} time.");
+			else
+				Console.WriteLine($"Generated {count} users and sent {success} successfull request in {sw.Elapsed} time.");
 		}
 
-		private static bool SendRequest(string url, string body)
+		private static async Task<bool> CreateUser(string url, bool formatted, Faker<User> testUsers, bool sendRequest, int success)
+		{
+			var user = testUsers.Generate();
+			var body = JsonConvert.SerializeObject(user, formatted ? Formatting.Indented : Formatting.None);
+			Console.WriteLine(body);
+			if (!sendRequest) return true;
+			var isDone = await SendRequest(url, body);
+			if (isDone) return true;
+			return false;
+		}
+
+		private static async Task<bool> SendRequest(string url, string body)
 		{
 			Console.WriteLine($"Sending request to {url}");
 			try
 			{
-				var client = new HttpClient();
 				var content = new StringContent(body, Encoding.UTF8, "application/json");
-				var request = client.PostAsync(url, content).GetAwaiter().GetResult();
+				var request = await client.PostAsync(url, content);
 				Console.WriteLine($"Request is completed with {request.StatusCode}");
 				return request.IsSuccessStatusCode;
 			}
