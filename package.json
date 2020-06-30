@@ -1,0 +1,10 @@
+{
+  "name": "databrute",
+  "version": "1.0.0",
+  "main": "index.js",
+  "license": "MIT",
+  "scripts": {
+    "b": "dotnet build",
+    "go": "dotnet bin/Debug/netcoreapp3.1/Databrute.dll"
+  }
+}
