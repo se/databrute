@@ -5,6 +5,9 @@
   "license": "MIT",
   "scripts": {
     "b": "dotnet build",
-    "go": "dotnet bin/Debug/netcoreapp3.1/Databrute.dll"
+    "go": "dotnet bin/Debug/netcoreapp3.1/Databrute.dll",
+    "i": "dotnet tool install -g dotnet-databrute --add-source=./nupkg",
+    "u": "dotnet tool update -g dotnet-databrute --add-source=./nupkg",
+    "r": "dotnet tool uninstall -g dotnet-databrute"
   }
 }

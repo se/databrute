@@ -19,7 +19,7 @@ yarn b
 ### For running it;
 
 ```sh
-yarn go --count=50000 --url=http://localhost:4020/people --formatted
+yarn go --count=100 --url=http://localhost:4020/people --formatted
 ```
 
 ### Explanation;
@@ -53,6 +53,13 @@ yarn go --count=50000 --url=http://localhost:4020/people --formatted
   "id": 11958
 }
 ```
+
+### Adding as Global Command with dotnet-tool
+```sh
+dotnet tool install -g dotnet-databrute
+```
+
+And now, you can use all commands just typing `databrute --count=100 --url=http://localhost:4020/people --formatted`.
 
 This project is using [Bogus](https://github.com/bchavez/Bogus) and [Newtonsoft.Json](https://github.com/JamesNK/Newtonsoft.Json).
 
